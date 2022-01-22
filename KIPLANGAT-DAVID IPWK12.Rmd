@@ -2,7 +2,9 @@
 title: "R markdown- IPWK12"
 author: "KIPLANGAT-DAVID"
 date: "January 21, 2022"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
