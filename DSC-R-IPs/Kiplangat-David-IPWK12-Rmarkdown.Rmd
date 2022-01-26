@@ -1,0 +1,366 @@
+---
+title: "WK12-IP"
+author: "KIPLANGAT-DAVID"
+date: "January 26, 2022"
+output: html_document
+---
+
+__RESEARCH QUESTION__
+
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. She would now like to employ your services as a Data Science Consultant to help her identify which individuals are most likely to click on her ads
+
+__METRIC FOR SUCCESS__
+
+This project will be successful if we successfuly predict individuals who are likely to click the ad,their ages and gender.
+
+__THE CONTEXT__
+The Google Ads Auction
+Google Ads works on an auction system, which takes place every time a user performs a keyword search.
+The Google Ads auction is focused around keywords - advertisers choose a list of keywords to target that are relevant to their business offerings, the words that people are most likely to use when searching for their product. They then bid on these keywords, basing each bid on how much they are willing to pay for a Google user to click on their ad. This bid, combined with a Quality Score assigned by Google based on the quality of your proposed ad, determines which Google ads appear on the SERP. When users click the ads, the advertiser pays a certain cost (the cost per click, or CPC), which is calculated according to the below formula:
+
+(Competitor AdRank/Your Quality Score) + 0.1
+
+ __EXPERIMENTAL DESIGN__
+ 
+ 1. Load libraries(ggplot for visualization)
+ 2. Load data
+ 3. Data cleaning
+ 4. Exploratory Data Analysis
+
+__DATA RELEVANCE__
+
+We are using the advertising data consisting  of 10 variables: 'Daily Time Spent on Site', 'Age', 'Area Income', 'Daily Internet Usage', 'Ad Topic Line', 'City', 'Male', 'Country', Timestamp' and 'Clicked on Ad'.
+
+The main variable we are interested in is 'Clicked on Ad'. This variable has two possible outcomes: 0 and 1 where 0 refers to the case where a user didn't click the advertisement, while 1 refers to the scenario where a user clicks the advertisement.
+
+
+
+First, let's print our working directory
+```{r}
+
+getwd()
+
+```
+
+Now let's dive into our first step
+
+__1. Import Libraries__
+
+Here we will call the ggplot2 which will be useful in vizualisation
+```{r}
+#library('tidyverse')
+library('ggplot2')
+
+```
+
+__2. Load Data__
+
+Here we will read our data from the working directory using 'read.csv' because it is a csv file. We will then check top 5 and bottom 5 records.
+```{r}
+data <- read.csv("file:///C:/Users/WILLY KIRUI/Downloads/advertising.csv.csv",TRUE,",")
+
+#preview top 5 records
+head(data,5)
+```
+
+```{r}
+#preview bottom 5 records
+tail(data,5)
+```
+
+- Our dataset records contain our relevant advertising records and therefore relevant for our study.
+
+Let's check dataset class
+```{r}
+#check data class
+class(data)
+
+```
+- Our dataset is stored in a dataframe as you can see above.
+
+Proceed and check number rows and columns
+```{r}
+#check shape of the data
+print(nrow(data))
+print(ncol(data))
+
+```
+- Our dataset has 1000 rows and columns. Let's check datatypes to get more insights
+
+```{r}
+#check data types
+str(data)
+
+```
+
+- Our dataset has:
+      - 3 numeric variables
+      - 3 integer variables
+      - 4 character variables
+- They are in correct datatype format and therefore no need of conversion. 
+
+Let's jump to the next step.
+
+__2. Data Cleaning__
+
+Here we will:
+  1. rename columns
+  2. missing values
+  3. duplicates
+  4. outliers
+  5. anomalies
+  
+ __2.1 Renaming columns__
+ 
+```{r}
+#renane columns
+names(data)[1] <- "daily_time_on_site"
+names(data)[2] <- "age"
+names(data)[3] <- " area_income"
+names(data)[4] <- "daily_internet_usage"
+names(data)[5] <- "ad_topic_line"
+names(data)[6] <- "city"
+names(data)[7] <- "male"
+names(data)[8] <- "country"
+names(data)[9] <- "timestamp"
+names(data)[10] <- "clicked_on_ad"
+
+#check whether our columns were renamed   
+print(head(data,3))
+```
+
+- Our columns were successfully renamed 
+
+ __2.2 Missing values__
+
+
+```{r}
+#check missing values
+sum(is.na(data))
+
+```
+- Our dataset has no missing values
+
+
+ __2.3 Duplicates__
+ 
+```{r}
+sum(duplicated(data))
+```
+
+- There are also no duplicates
+
+
+ __2.4 Outliers__
+We will plot boxplot to visualize outliers for the numerical & integer continous variables and deal with them if any
+
+
+```{r}
+#Age column
+boxplot(data$age,
+  ylab = "Age",
+  main = "Boxplot of Age showing outliers")
+```
+```{r}
+#Daily_time_on_site
+boxplot(data$daily_time_on_site, ylab = "daily_time_on_site",main = "Boxplot of daily_time_on_site showing outliers", fill = "blue") 
+```
+
+```{r}
+#,data$area_income,
+#out <- boxplot.stats(data$daily_time_on_site)$out
+boxplot(data$daily_internet_usage,ylab = "daily_internet_usage",main = "Boxplot of daily_internet_usage showing outliers")
+
+
+```
+- The boxplots shows that our dataset has no outliers.
+
+ __2.5 Anomalies__
+ An anomaly refers to data points in data that do not fit the normal patterns. The boxplots above shows no presence of anomalies.
+ 
+Let's proceed to exploratory data analysis
+ 
+
+__3. Exploratory Data Analysis__
+
+Here we will do:
+  1. summary statistics
+  2. Univariate analysis
+  3. Bivariate analysis
+  
+
+__3.1 Summary statistics__
+
+```{r}
+#summary statistics
+summary(data)
+```
+
+
+- Minimum age is 19, mean is 36/01 and maximum age is 61. This means that the site is visited by adult users.
+- The minimum area income is  13,996 and the maximum is 79,485. This means that individuals who visit the site are people belonging to different social classes
+- Daily internet usage is between 104.8 and 270.0
+- Individuals spend between 32 and 91 minutes on the website in one session. This must be a popular website
+
+Now let's print most searched keyword. We will do so by printing mode
+of 'ad_topic_line' column
+
+```{r}
+#mode
+# 
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+# Calculating the mode using out getmode() function
+# ---
+city_mode <- getmode(data$city)
+topic <- getmode(data$ad_topic_line)
+print(topic)
+```
+
+ __3.2 Univariate Analysis__
+ 
+
+
+```{r}
+
+# Distribution of ad_clicks.
+library(plotrix)
+clicks <- table(data$clicked_on_ad)
+piepercent<- round(100 * clicks / sum(clicks), 2)
+ 
+# Plot the chart.
+pie3D(clicks, labels = piepercent,
+    main = "Ad_clicks pie chart", explode =0.2,col = c('darkblue','red'))
+legend("topright", c("0", "1"))
+                                              
+```
+
+
+- 0 means an advert was not clicked and 1 means an advert was clicked by a user. They have equal distributions of 50 percent each.
+
+
+
+```{r}
+#Gender distribution
+gender <- table(data$male)
+barplot(gender, main="Distribution of gender",
+  xlab="Gender", col=c("darkblue","red"),
+  legend = rownames(clicks), beside=TRUE)
+```
+- Here, 0-female and 1-male.
+- There are slightly more women visting the site than men
+
+
+```{r}
+# Distribution of age
+x <- data$age
+h<-hist(x, breaks=10, col="red", xlab="Age",
+   main="Distribution of Age")
+xfit<-seq(min(x),max(x),length=40)
+yfit<-dnorm(xfit,mean=mean(x),sd=sd(x))
+yfit <- yfit*diff(h$mids[1:2])*length(x)
+lines(xfit, yfit, col="blue", lwd=2)
+```
+- The distribution is normal with range between 19 and 61 years
+
+
+
+__3.3 Bivariate Analysis__
+
+```{r}
+# Distribution of clicks by gender
+counts <- table(data$male, data$clicked_on_ad)
+barplot(counts, main="Distribution of clicks by gender",
+  xlab="Gender",ylab="Clicks", col=c("darkblue","red"),
+  legend = rownames(counts), beside=TRUE)
+
+```
+
+- Half of the women who visit the site click the ad and half of them do not
+- Higher number men who visit the website clicks the ad
+
+
+```{r}
+#relationshiop between age and ad clicks
+ggplot(aes(y = age, x = as.factor(clicked_on_ad)), data = data) + 
+  geom_point(alpha = 0.4, pch = 1) + 
+  geom_smooth(method = loess) + 
+  labs(y= 'Age',
+       x= 'Clicks',
+       title= 'Relationship of Age and Ads Clicks',col='blue')
+```
+-Older people clicks the ad more than younger people
+
+
+```{r}
+ggplot(aes(y = age, x = daily_time_on_site), data = data) + 
+  geom_point(alpha = 0.4, pch = 1) + 
+  geom_smooth(method = loess) + 
+  labs(y= 'Age',
+       x= 'Daily_time_on_site',
+       title= 'Relationship of users age and time spent on site')
+```
+- people aged 30-45 spent more time on the site
+
+
+```{r}
+#relationship of age and daily internet usage
+ggplot(aes(y = daily_internet_usage, x = age), data = data) + 
+  geom_point(alpha = 0.4, pch = 1) + 
+  geom_smooth(method = loess) + 
+  labs(y= 'daily_internet_usage',
+       x= 'Age',
+       title= 'Relationship of age and daily internet usage')
+```
+
+- Young people aged 19-40 spent more internet on average compared to older people aged 40-61
+
+
+```{r}
+#relationship between internet usage and the daily time on site
+ggplot(aes(y = daily_internet_usage, x = daily_time_on_site), data = data) + 
+  geom_point(alpha = 0.4, pch = 1) + 
+  geom_smooth(method = loess) + 
+  labs(y= 'daily_internet_usage',
+       x= 'daily_time_on_site',
+       title= 'Relationship of time on site and daily internet usage')
+```
+
+- internet usage is higher in average with increased time on site
+
+
+ __Correlation__
+
+```{r}
+#correlation between daily time on site and ad clicks
+corr <-cor.test(data$daily_time_on_site, data$clicked_on_ad,  method = "spearman")
+corr
+```
+
+- The p-value of the test is  < 2.2e-16, which is less than the significance level alpha = 0.05. We can conclude that time on site and click_on_ad are significantly correlated with a correlation coefficient of -0.7448725 .
+
+
+```{r}
+#correlation between age and ad clicks
+corr <-cor.test(data$age, data$clicked_on_ad,  method = "spearman")
+corr
+```
+
+
+  __4. Conclusion__
+  
+  - 50% of individuals who visit the site clicks the ad and 50% do not
+  - More female individuals visits the site and clicks the ad as well compared to male individuals
+  - Aged individuals who visit the site clicks the ad more compared to younger individuals aged 40 and below.
+- Younger individuals spent more time on the internet as well as internet usage
+
+
+__5. Recommendation__
+
+- Creat ads that are relevant and directly address different individuals such as male,female,young and old, social classes etc
+
+- Compute correlation of variables using kendall tau which has better statistical properties compared to spearmann
+
